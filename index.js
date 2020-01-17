@@ -135,7 +135,7 @@ async function runKeywordFetchTest() {
     );
 
     log('Re-running all tests a second time...');
-    await runKeywordFetchTestNoIndex(testData, searchKeys));
+    await runKeywordFetchTestNoIndex(testData, searchKeys);
     await runKeywordFetchTestNaiveIndex(testData, searchKeys)
     await runKeywordFetchTestIndexWithId(testData, searchKeys)
     await runKeywordFetchTestWithKeywordsArrayView(testData, searchKeys);
