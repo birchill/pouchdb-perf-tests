@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>PouchDB query perf tests</title>
+<script src="lib/pouchdb/pouchdb.js"></script>
+<script src="lib/pouchdb/pouchdb.find.js"></script>
+<output class=output></output>
+<script src="index.js"></script>
+<script>
+  runKeywordFetchTest();
+</script>
+<style>
+output {
+  display: block;
+  border: 1px dotted grey;
+  border-radius: 1em;
+  margin: 1em;
+  padding: 1em;
+}
+.error {
+  color: red;
+}
+.heading {
+  text-decoration: underline;
+}
+.result {
+  font-weight: bold;
+}
+</style>
