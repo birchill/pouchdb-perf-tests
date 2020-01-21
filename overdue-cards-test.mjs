@@ -27,10 +27,12 @@ export async function runOverdueCardsTest({ numCards, numNotes }) {
     log('Running overdueness test...');
     queryResults.push(await runViewTest(testData));
     queryResults.push(await runIndexTest(testData));
+    queryResults.push(await runIndexWithIdTest(testData));
 
-    log('Re-running all tests a second time...');
-    await runViewTest(testData);
+    log('Re-running all tests a second time in reverse order...');
+    await runIndexWithIdTest(testData);
     await runIndexTest(testData);
+    await runViewTest(testData);
 
     log('Done.');
   } catch (e) {
@@ -127,6 +129,67 @@ async function runViewTest(testData, searchKeys) {
 async function runIndexTest(testData, searchKeys) {
   // Prep
   log('2. Due index', 'heading');
+  log('Preparing database...');
+  const db = await prepareTestDatabase(testData);
+  await waitForIdle();
+  log('Running test...');
+
+  const reviewTime = new Date();
+
+  // Run test
+  const startTime = performance.now();
+  await db.createIndex({
+    index: {
+      fields: ['due'],
+      name: 'due',
+      ddoc: 'progress_by_due_date',
+    },
+  });
+  const indexCreationTimeMs = performance.now() - startTime;
+
+  const timeResults = [];
+  let queryResult;
+  for (let i = 0; i < 5; i++) {
+    const runStartTime = performance.now();
+    const findResult = await db.find({
+      selector: {
+        _id: { $gt: 'progress-', $lt: 'progress-\ufff0' },
+        due: { $gt: 0, $lte: reviewTime.getTime() },
+      },
+      use_index: ['progress_by_due_date', 'due'],
+    });
+
+    const reviewTimeAsNumber = reviewTime.getTime();
+    const progressByOverdueness = [];
+    for (const doc of findResult.docs) {
+      progressByOverdueness.push([
+        getOverdueness(doc, reviewTimeAsNumber),
+        doc,
+      ]);
+    }
+    progressByOverdueness.sort((a, b) => b[0] - a[0]);
+
+    const progressDocs = progressByOverdueness.map(([_, doc]) => doc);
+    queryResult = await getCardsFromProgressDocs(db, progressDocs);
+
+    timeResults.push(performance.now() - runStartTime);
+  }
+  const durationMs = performance.now() - startTime;
+
+  // Clean up
+  await db.destroy();
+
+  log(`Index creation took ${indexCreationTimeMs}ms`);
+  logResults(durationMs, timeResults);
+
+  return queryResult;
+}
+
+// 3. Using an index on due and ID fields
+
+async function runIndexWithIdTest(testData, searchKeys) {
+  // Prep
+  log('3. Due and ID index', 'heading');
   log('Preparing database...');
   const db = await prepareTestDatabase(testData);
   await waitForIdle();
