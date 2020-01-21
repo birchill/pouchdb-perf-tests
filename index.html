@@ -3,12 +3,24 @@
 <title>PouchDB query perf tests</title>
 <script src="lib/pouchdb/pouchdb.js"></script>
 <script src="lib/pouchdb/pouchdb.find.js"></script>
+<div class=controls>
+<select name=test id=test>
+  <option value=keyword-fetch>Keyword fetch</option>
+  <option value=overdue-cards>Overdue cards</option>
+</select>
+Cards: <input type=number length=5 value=2000 id=num-cards>
+Notes: <input type=number length=5 value=400 id=num-notes>
+<button id=go>Go!</button>
+</div>
 <output class=output></output>
-<script src="index.js"></script>
-<script>
-  runKeywordFetchTest();
-</script>
+<script type=module src="index.mjs"></script>
 <style>
+.controls {
+  margin: 1em;
+}
+.controls, .controls > * {
+  font-size: 20px;
+}
 output {
   display: block;
   border: 1px dotted grey;
