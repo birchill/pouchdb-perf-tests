@@ -28,8 +28,10 @@ export async function runOverdueCardsTest({ numCards, numNotes }) {
     queryResults.push(await runViewTest(testData));
     queryResults.push(await runIndexTest(testData));
     queryResults.push(await runIndexWithIdTest(testData));
+    queryResults.push(await runNoIndexTest(testData));
 
     log('Re-running all tests a second time in reverse order...');
+    await runNoIndexTest(testData);
     await runIndexWithIdTest(testData);
     await runIndexTest(testData);
     await runViewTest(testData);
@@ -246,6 +248,57 @@ async function runIndexWithIdTest(testData, searchKeys) {
   return queryResult;
 }
 
+// 4. Using no index
+
+async function runNoIndexTest(testData, searchKeys) {
+  // Prep
+  log('4. No index', 'heading');
+  log('Preparing database...');
+  const db = await prepareTestDatabase(testData);
+  await waitForIdle();
+  log('Running test...');
+
+  const reviewTime = new Date();
+
+  // Run test
+  const startTime = performance.now();
+
+  const timeResults = [];
+  let queryResult;
+  for (let i = 0; i < 5; i++) {
+    const runStartTime = performance.now();
+    const findResult = await db.find({
+      selector: {
+        _id: { $gt: 'progress-', $lt: 'progress-\ufff0' },
+        due: { $gt: 0, $lte: reviewTime.getTime() },
+      },
+    });
+
+    const reviewTimeAsNumber = reviewTime.getTime();
+    const progressByOverdueness = [];
+    for (const doc of findResult.docs) {
+      progressByOverdueness.push([
+        getOverdueness(doc, reviewTimeAsNumber),
+        doc,
+      ]);
+    }
+    progressByOverdueness.sort((a, b) => b[0] - a[0]);
+
+    const progressDocs = progressByOverdueness.map(([_, doc]) => doc);
+    queryResult = await getCardsFromProgressDocs(db, progressDocs);
+
+    timeResults.push(performance.now() - runStartTime);
+  }
+  const durationMs = performance.now() - startTime;
+
+  // Clean up
+  await db.destroy();
+
+  logResults(durationMs, timeResults);
+
+  return queryResult;
+}
+
 function getOverdueness(doc, reviewTimeAsNumber) {
   const daysOverdue = (reviewTimeAsNumber - doc.due) / MS_PER_DAY;
   const linearComponent = daysOverdue / doc.level;
@@ -286,7 +339,7 @@ async function getCardsFromProgressDocs(db, progressDocs) {
       progress: {
         level: progressDocs[i].level,
         due: progressDocs[i].due,
-      }
+      },
     });
   }
 

@@ -50,7 +50,7 @@ export function compareQueryResults(queryResults) {
   let ok = true;
   for (let i = 1; i < queryResults.length; i++) {
     if (JSON.stringify(queryResults[i]) !== JSON.stringify(firstRun)) {
-      log(`Result for run #${i} differs from first run. Check console`);
+      log(`Result for run #${i + 1} differs from first run. Check console`);
       console.log('First run:');
       console.log(firstRun);
       console.log(`Run #${i + 1}:`);
