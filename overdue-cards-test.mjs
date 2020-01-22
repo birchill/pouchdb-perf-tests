@@ -188,6 +188,10 @@ async function runIndexTest(testData, searchKeys) {
 }
 
 // 3. Using an index on due and ID fields
+//
+// XXX This currently produces wrong results when using indexeddb adapter on
+// both Firefox and Chrome. It works with the idb adapter but takes longer so
+// it's possibly just wrong.
 
 async function runIndexWithIdTest(testData, searchKeys) {
   // Prep
