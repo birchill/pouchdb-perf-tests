@@ -1,3 +1,4 @@
+import { runFetchByIdTest } from './fetch-by-id.mjs';
 import { runKeywordFetchTest } from './keyword-fetch-test.mjs';
 import { runOverdueCardsTest } from './overdue-cards-test.mjs';
 
@@ -14,6 +15,10 @@ go.addEventListener('click', () => {
 
     case 'overdue-cards':
       runOverdueCardsTest({ numCards, numNotes });
+      break;
+
+    case 'fetch-by-id':
+      runFetchByIdTest({ numCards, numNotes });
       break;
   }
 });

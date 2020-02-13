@@ -44,7 +44,7 @@ export async function runOverdueCardsTest({ numCards, numNotes }) {
   compareQueryResults(queryResults);
 }
 
-// 1. With separate overduness view (current setup)
+// 1. With separate overdueness view (current setup)
 
 async function runViewTest(testData, searchKeys) {
   // Prep
